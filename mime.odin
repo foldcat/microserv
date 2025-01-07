@@ -1,3 +1,5 @@
+#+feature dynamic-literals
+
 package microserv
 
 Mime_Type := map[string]string {

@@ -193,7 +193,7 @@ main :: proc() {
 
 	// SOCKET CREATION
 	log.info("listening to socket")
-	lsocket, serr := net.listen_tcp(net.Endpoint{port = PORT, address = net.IP4_Loopback})
+	lsocket, serr := net.listen_tcp(net.Endpoint{port = PORT, address = LISTEN_ADDR})
 	if serr != nil {
 		log.panic("listen error:", serr)
 	}
