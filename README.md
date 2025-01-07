@@ -9,10 +9,10 @@ Optionally, MicroServ can generate a file explorer.
 
 MicroServ has no external dependencies. Simply:
 ```bash
-# release (-o:speed boost performance by 2x)
+# release
 odin build . -o:speed
 
-# debug (debug loggimg, tracking allocator)
+# debug
 odin build . -debug
 ```
 
