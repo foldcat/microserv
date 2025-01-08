@@ -8,7 +8,7 @@ SERV_DIR :: "./resources/"
 // what port to use
 PORT :: 45392
 
-// whether generate a file explorer if index.html is not found
+// whether to generate a file explorer if index.html is not found
 // and the client requests a directory
 GENERATE_EXPLORER :: true
 
@@ -20,7 +20,7 @@ DEFAULT_MIME :: "application/octet-stream"
 // devices to connect to microserv
 LISTEN_ADDR :: net.IP4_Loopback
 
-// use a LRU cache to store webpages, with this enabled changes 
+// enable using a LRU cache to store webpages, with this enabled changes 
 // in files may not be reflected by the server
 ENABLE_CACHE :: true
 
