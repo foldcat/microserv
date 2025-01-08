@@ -22,7 +22,9 @@ LISTEN_ADDR :: net.IP4_Loopback
 
 // enable using a LRU cache to store webpages, with this enabled changes 
 // in files may not be reflected by the server
-ENABLE_CACHE :: true
+// WARNING: do NOT use -o:speed with this on, as it may cause instability 
+// under multiple concurrent requests
+ENABLE_CACHE :: false
 
 // has no effect if ENABLE_CACHE is false, control 
 // the size of the cache
