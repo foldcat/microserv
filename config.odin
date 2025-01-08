@@ -19,3 +19,11 @@ DEFAULT_MIME :: "application/octet-stream"
 // set to net.IP4_Address{0, 0, 0, 0} if you want other 
 // devices to connect to microserv
 LISTEN_ADDR :: net.IP4_Loopback
+
+// use a LRU cache to store webpages, with this enabled changes 
+// in files may not be reflected by the server
+ENABLE_CACHE :: true
+
+// has no effect if ENABLE_CACHE is false, control 
+// the size of the cache
+CACHE_SIZE :: 100

@@ -1,9 +1,11 @@
 # MicroServ
 
-MicroServ is a simple http server for hosting static webpages.
+MicroServ is a simple http server for hosting small static webpages.
 It is rather minimalistic and can handle a lot of requests.
 
-Optionally, MicroServ can generate a file explorer.
+## Optional Features 
+- caching
+- rendering file explorer
 
 ## Building
 
@@ -23,4 +25,3 @@ Options are documented inside.
 
 ## Planned features
 - multithreading
-- caching

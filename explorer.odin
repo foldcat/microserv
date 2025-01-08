@@ -68,8 +68,6 @@ clean_path :: proc(p: string) -> (out: string, ok := false) {
 }
 
 gen_explorer :: proc(p: string) -> (result: string, ok := false) {
-	log.debug("generating explorer for", p)
-
 	builder := strings.builder_make()
 
 	strings.write_string(&builder, Explorer_Head)
@@ -82,21 +80,14 @@ gen_explorer :: proc(p: string) -> (result: string, ok := false) {
 		return
 	}
 
-	log.debug("opened dir")
-
 	files, rerr := os.read_dir(handle, 2048)
-	log.debug(files)
 	if rerr != nil {
 		log.error("failed to read", p)
 		log.error("reason:", rerr)
 		return
 	}
 
-	fmt_curr_path := fmt.aprintfln("<div class=\"path\">Current Path: %s</div>", p)
-	strings.write_string(&builder, fmt_curr_path)
-
 	strings.write_string(&builder, "<ul class=\"file-list\">\n")
-	log.debug("file", files)
 
 	for file in files {
 		fname := file.name
@@ -108,11 +99,6 @@ gen_explorer :: proc(p: string) -> (result: string, ok := false) {
 			fname = fmt.aprint(fname, "/", sep = "")
 		}
 
-		log.debug("fpath", fpath)
-		log.debug("clean", clean_path(fpath))
-		log.debug("p", p)
-
-		log.debug(file.name)
 		list_item := fmt.aprintf("<li><a href=\"%s\">%s</a></li>", fpath, fname)
 
 		strings.write_string(&builder, list_item)
@@ -121,8 +107,6 @@ gen_explorer :: proc(p: string) -> (result: string, ok := false) {
 	strings.write_string(&builder, Explorer_Tail)
 
 	result = strings.to_string(builder)
-
-	log.debug(result)
 
 	ok = true
 

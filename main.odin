@@ -1,8 +1,9 @@
 package microserv
 
-// microserv is a simple tcp html server
+// microserv is a simple http server
 
 import "core:bufio"
+import "core:container/lru"
 import "core:crypto"
 import "core:encoding/uuid"
 import "core:fmt"
@@ -14,6 +15,11 @@ import "core:os"
 import path "core:path/filepath"
 import "core:strings"
 import "core:time"
+
+
+when ENABLE_CACHE {
+	cache: lru.Cache(string, string)
+}
 
 
 // grabs resource path from request
@@ -85,7 +91,7 @@ gen_response :: proc(p: string) -> string {
 	return strings.to_string(builder)
 }
 
-fetch_file :: proc(p: string) -> (data: []u8, ok := false) {
+fetch_file :: proc(p: string) -> (data: string, ok := false) {
 	from_res := []string{SERV_DIR, p}
 	trg_path := path.join(from_res)
 	response_payload: string
@@ -97,19 +103,14 @@ fetch_file :: proc(p: string) -> (data: []u8, ok := false) {
 
 	// auto switch to index.html given a path
 	if os.is_dir(trg_path) {
-		log.debug("is directory")
 		index := []string{trg_path, "index.html"}
 		index_path := path.join(index)
-		log.debug(trg_path)
 		// generate explorer if index.html is not existing
 		if os.exists(index_path) {
-			log.debug("index exists")
 			response_payload = gen_response(index_path)
 		} else {
 			when GENERATE_EXPLORER {
-				log.debug("generating explorer")
 				res := gen_explorer(trg_path) or_return
-				log.debug("explorer:", res)
 				response_payload = gen_explorer_header(res)
 			} else {
 				log.error(index_path, "does not exist")
@@ -118,22 +119,19 @@ fetch_file :: proc(p: string) -> (data: []u8, ok := false) {
 		}
 	} else {
 		// not a directory
-		log.debug("not a dir")
 		response_payload = gen_response(trg_path)
 	}
 
-	log.debug("resp pay", response_payload)
-
-	data = transmute([]u8)(response_payload)
+	data = response_payload
 	ok = true
-
-	log.debug("fetch file returning")
 
 	return
 }
 
 // this should probably be parallelized
 receive_job :: proc(socket: ^net.TCP_Socket) {
+	defer net.close(socket^)
+
 	buffer := [8192]u8{} // nice size
 
 	byte_read, err := net.recv_tcp(socket^, buffer[:])
@@ -142,17 +140,35 @@ receive_job :: proc(socket: ^net.TCP_Socket) {
 
 	path := parse_req_header(data)
 
-	file_data, ok := fetch_file(path)
+	file_data: string
+	ok: bool
+
+	when ENABLE_CACHE {
+		if fetch_result, fetch_ok := lru.get(&cache, path); fetch_ok {
+			slice := transmute([]u8)fetch_result
+			net.send_tcp(socket^, slice)
+			return
+		} else {
+			// not found
+			file_data, ok = fetch_file(path)
+
+			// prevent discarding by arena reset
+			copy := strings.clone(file_data, context.temp_allocator)
+			lru.set(&cache, path, copy)
+		}
+
+	} else {
+		// no cache
+		file_data, ok = fetch_file(path)
+
+	}
+
 	if !ok {
 		log.warn("file not found:", path)
 		net.send_tcp(socket^, transmute([]u8)gen_404())
 	} else {
-		net.send_tcp(socket^, file_data)
+		net.send_tcp(socket^, transmute([]u8)file_data)
 	}
-
-	net.close(socket^)
-
-	//fmt.println("socket closed")
 }
 
 
@@ -178,6 +194,11 @@ main :: proc() {
 			}
 			mem.tracking_allocator_destroy(&track)
 		}
+	}
+
+	// CACHE 
+	when ENABLE_CACHE {
+		lru.init(&cache, CACHE_SIZE)
 	}
 
 	// LOGGER
