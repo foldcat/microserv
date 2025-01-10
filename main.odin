@@ -69,24 +69,13 @@ gen_response :: proc(p: string) -> string {
 	strings.write_string(&builder, "\r\n")
 
 	// entire file
-	file, ferr := os.open(p)
-	if ferr != 0 {
+	entire_file, ok := os.read_entire_file(p)
+	if !ok {
 		log.error("failed to read file")
 	}
-	defer os.close(file)
-
-	r: bufio.Reader
-	str_buffer: [1024]byte
-	bufio.reader_init_with_buf(&r, os.stream_from_handle(file), str_buffer[:])
-
-	for {
-		line, err := bufio.reader_read_string(&r, '\n')
-		if err != nil {
-			break
-		}
-		strings.write_string(&builder, line)
+	for byte in entire_file {
+		strings.write_byte(&builder, byte)
 	}
-
 
 	return strings.to_string(builder)
 }
